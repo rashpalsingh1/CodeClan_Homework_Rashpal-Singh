@@ -1,0 +1,151 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(lubridate)
+```
+
+
+```{r}
+books_data <- read_csv("data/books.csv")
+```
+
+
+```{r}
+#Inspecting the data
+#view(books_data)
+```
+
+I've decided to answer the following question:
+
+1. 5 longest & shortest books
+2. author with the most books
+3. author those works have the highest ratings
+4. oldest 5 books, newest 5 books
+5. average rating of all books - book that have a rating above average
+6. a publication date in the future
+
+
+
+However first we need to check and clean up the data
+
+```{r}
+#check for duplicate book IDs (duplicate titles exist but I believe that these are unique books as these are published by different organisations - e.g. "Salem's Lot)
+books_data %>% 
+  distinct(bookID)
+
+#All IDs are disctinct
+```
+
+
+
+```{r}
+#checking for the number of Nas/NaNs in the data
+books_data %>% 
+  summarise(across(.fns = ~sum(is.na(.x))))
+  
+```
+
+
+```{r}
+#Looking for columns which have values of 0 where it doesn't make sense
+#clearly average_rating, ratings_count & text_reviews_count could have a value of zero
+
+books_data[books_data$bookID == 0,] 
+books_data[books_data$title == 0,]
+books_data[books_data$authors == 0,]
+books_data[books_data$isbn == 0,]
+books_data[books_data$isbn13 == 0,]
+books_data[books_data$language_code == 0,]
+books_data[books_data$num_pages == 0,]
+books_data[books_data$publication_date == 0,]
+books_data[books_data$publisher == 0,]
+
+#There is a large number of 0 values in the 'num_pages column
+
+```
+
+
+```{r}
+#convert zeros to NA in num_pages column
+books_data_nozeroes <- books_data %>% 
+  mutate(num_pages = na_if(num_pages, 0))
+
+```
+
+```{r}
+#checking the above command has given the desired outcome
+books_data_nozeroes3[books_data_nozeroes3$num_pages == 0,]
+```
+
+
+#The titles of the 5 longest & shortest books
+```{r}
+#The title of the 5 shortest books
+books_data_nozeroes %>% 
+ slice_min(num_pages, n = 5)
+```
+
+```{r}
+#The title of the 5 longest books
+books_data_nozeroes %>% 
+  slice_max(num_pages, n = 5)
+```
+
+
+
+2. author with the most books
+```{r}
+books_author <- group_by(books_data, authors)
+arrange((summarise(books_author , author_count = n())), desc(author_count))
+```
+
+3. author those works have the highest ratings
+```{r}
+view(books_author)
+#Need to find the median rating for all an author's book and then sort these returning the author's name, didn't mange this one
+
+```
+
+4. oldest 5 books, newest 5 books
+```{r}
+books_data %>% 
+ slice_min(publication_date, n = 5)
+
+```
+```{r}
+books_data %>% 
+ slice_max(publication_date, n = 5)
+
+```
+
+5. average rating of all books - book that have a rating above average
+```{r}
+#remove 0 values from average_rating
+books_data_ratings <- books_data %>% 
+  mutate(average_rating = na_if(average_rating, 0))
+
+#add a new column to capture average rating for all books
+books_data_ratings_avg <- books_data_ratings %>% 
+mutate(overall_avg_rating = median(average_rating, na.rm = TRUE))
+
+#compare a books rating to overall average rating
+books_data_ratings_avg %>% 
+  filter(average_rating > overall_avg_rating)
+#try to arrange this in descending order by average_rating like I did in question 2, however it continually failed???
+```
+
+
+
+6. A publication date in the future
+```{r}
+#I attempted to convert publication_date to date type and planned to compare it to current date today(), however I couldn't get it to work! I also looked at the lubridate package, however I couldn't get it to work
+
+books_data %>% 
+as.Date(publication_date, "%Y-%m-%d")
+```
+
+
