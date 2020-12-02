@@ -1,0 +1,155 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+```
+
+
+
+1.Find the weather forecast for the next three days online. Create a list of lists in which each inner list should be labelled with the name of the day of the week. Each inner list should contain named elements telling you the temperature, chance of rain and wind speed.
+
+```{r}
+weather <- list(
+                "Thursday" = list(temperature = 3, chance_of_rain = "low", wind_speed = 8 ),
+                "Friday" = list(temperature = 6, chance_of_rain = "high", wind_speed = 12 ),
+                "Saturday" = list(temperature = 6, chance_of_rain = "medium", wind_speed = 9)
+)
+```
+
+2.Using the list you’ve just made find:
+
+The chance of rain tomorrow
+The wind speed on the day after tomorrow
+The temperature tomorrow.
+
+```{r}
+#The chance of rain tomorrow
+rain_tomorrow <- weather$Thursday$chance_of_rain
+rain_tomorrow
+```
+
+```{r}
+#The wind speed on the day after tomorrow
+friday_wind_speed <- weather$Friday$wind_speed
+friday_wind_speed 
+```
+
+```{r}
+#The temperature tomorrow.
+Thursday_temp <- weather$Thursday$temperature
+Thursday_temp
+```
+
+3. Find a 14 day forecast online and create a matrix of the forecasts for temperature, where each week is one row and columns correspond to days.
+
+```{r}
+two_week_forecast <- matrix(c(3, 6, 6, 4, 5, 3, 4, 5, 2, 1, 0, 2, 3, 4), 
+                            nrow = 7, ncol = 2,)
+
+#Create appropriate row & column names
+row.names(two_week_forecast) <- c("Monday", "Tuesday", "Wednesday", 
+                                  "Thursday", "Friday", "Saturday", "Sunday")
+colnames(two_week_forecast) <- c("Week1", "Week2")
+two_week_forecast
+
+
+```
+
+4.From the matrix you just made select:
+i.The third day of the second week
+ii.The whole second week
+iii.The first, third and fifth days in both weeks.
+
+```{r}
+two_week_forecast["Wednesday", "Week2"]
+```
+
+```{r}
+two_week_forecast[, "Week2"]
+```
+
+```{r}
+two_week_forecast[c("Monday", "Wednesday", "Friday"), c("Week1", "Week2")]
+```
+
+5. Write a function that pre-appends “The answer is:” to any character input, while for numeric input, it either just returns the number for numbers less than 10, or divides the number by 10 for numbers greater than 10. For anything else return “Invalid input”.
+
+```{r}
+my_function1 <- function(x){
+  if(is.character(x)){
+  return (str_c("The answer is:", x, sep = " "))
+  } else if(is.numeric(x)){
+    if(x < 10){
+      return (x)
+    }else {
+      return (x/10)
+    }
+  }
+  #Failing to meet the other 2 conditions will result in the below line being run
+  print("Invalid Input")
+}
+
+```
+
+```{r}
+#testing for character
+my_function1("R")
+```
+
+
+```{r}
+#testing for numeric
+my_function1(1)
+```
+
+```{r}
+#testing for Boolean
+my_function1(FALSE)
+```
+
+
+6. Write a function which checks if two vectors have the same elements.
+
+If they have the same elements in the same order, return “Exactly the same”
+If they have the same elements but in a different order, return “The same”
+If they don’t have the same elements, return “Different”.
+
+```{r}
+vector_check <- function(v1, v2){
+  if(length(v1) == length(v2)){ #check that the lengths are the same
+    if(all(v1 == v2)){ 
+      return("Exactly the same")
+    }else{
+      sorted_v1 <- sort(v1)
+      sorted_v2 <- sort(v2)
+      if(all(sorted_v1 == sorted_v2)){
+        return("The same")
+        }
+      }
+  }else{
+      print("The vectors are of different lengths")
+    
+  }
+  
+}
+  
+  
+```
+
+```{r}
+#test vectors
+vector1 <-c(1, 2, 4, 5)
+vector2 <-c(1, 2, 4, 5)
+vector3 <- c(1, 2, 4, 6, 8)
+vector4 <- c(1, 2, 5, 4)
+```
+
+```{r}
+#test
+vector_check(vector1, vector4)
+
+```
+
