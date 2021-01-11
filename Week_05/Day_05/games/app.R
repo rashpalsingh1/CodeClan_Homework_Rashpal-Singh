@@ -19,7 +19,7 @@ fluidRow(
                
                selectInput("publisher",
                             "Which Publisher?",
-                            choices = all_publishers
+                            choices = c(all_publishers, "All")
                             )
                
                 ),
@@ -27,7 +27,7 @@ fluidRow(
                
                selectInput("platform",
                            "Which Platform?",
-                           choices = all_platforms
+                           choices = c(all_platforms, "All")
                             )
                
                 ),
@@ -35,8 +35,8 @@ fluidRow(
         column(4, 
                
                selectInput("rating",
-                           "rating?",
-                           choices = c(all_ratings, "None")
+                           "Rating?",
+                           choices = c(all_ratings, "All")
                             )
                
                 ),
@@ -51,16 +51,17 @@ fluidRow(
                        "What did the Critics Think?",
                        choices = c("90% - 100%", "80% - 90%" ,"70% - 80%", 
                                    "60% - 70%", 
-                                   "50% - 60%", "less than 50%")
+                                   "50% - 60%", "less than 50%", 
+                                   "I don't care what they think")
                         )
            
             ),
     column(4, 
-           
            selectInput("user_score",
                        "What Did Users Think?",
                        choices = c("9 - 10", "8 - 9" ,"7 - 8", 
-                                   "6 - 7", "5 - 6", "less than 5")
+                                   "6 - 7", "5 - 6", "less than 5",
+                                   "I don't care what they think")
                         )
            
         ),
@@ -69,7 +70,7 @@ fluidRow(
            
            selectInput("genre",
                        "Genre?",
-                       choices = all_genres
+                       choices = c(all_genres, "All")
                         )
            
             ),
@@ -83,15 +84,14 @@ tableOutput("game_table")
 server <- function(input, output) {
     output$game_table <- renderTable({
             games %>%
-           # if(input$rating != "None"){
+           # if(input$rating != "All"){
            # filter(rating == input$rating) %>%
-           # slice(1:10)} %>% 
-            filter(platform == input$platform) %>%
-            slice(1:10) %>% 
+            filter(platform == input$platform) #%>%
+            
            # filter(publisher == input$publisher) %>%
-           # slice(1:10)
+           
     })
     
 }
 
-shinyApp(ui = ui, server = server)
+shinyApp(ui, server)
