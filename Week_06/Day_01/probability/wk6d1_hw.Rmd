@@ -1,0 +1,210 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(prob)
+library(gtools)
+library(tidyverse)
+```
+
+```{r}
+titanic <- read_csv("data/titanic.csv") 
+```
+
+
+# Add a column to confirm whether an individual was part of the crew
+```{r}
+titanic <- titanic %>% 
+  mutate(crew = ifelse(class %in% c("engineering crew", "deck crew",
+                                    "restaurant staff", "victualling crew"), TRUE, FALSE))
+```
+
+
+# create variables to allow probabilites to be calculated 
+```{r}
+(total_crew <- titanic %>%
+  filter(crew == TRUE) %>% 
+    nrow())
+
+  (crew_survived <- titanic %>% 
+    filter(crew == TRUE & survived == "yes") %>% 
+    nrow())
+
+#probability that crew survived
+(prob_crew_survived <- crew_survived/total_crew)
+
+
+(total_guests <- titanic %>%
+  filter(crew == FALSE) %>% 
+    nrow())
+
+  (guests_survived <- titanic %>% 
+    filter(crew == FALSE & survived == "yes") %>% 
+    nrow())
+
+#probability that guests survived
+(prob_guests_survived <- guests_survived /total_guests)
+
+
+```
+ANS: The probabality that guests survived is 0.38, whereas the probabality the crew
+survived was 0.24, therefore it was more likely for guests to have survived.
+
+
+1. If I roll a six-sided dice once, what is the probability of getting a number less than 5?
+
+```{r}
+s_roll_die <- nrow(rolldie(1))
+
+s_roll_die_filtered <- rolldie(1) %>% 
+  filter(X1 < 5 ) %>% 
+  nrow
+
+(probability <- s_roll_die_filtered/s_roll_die)
+```
+
+ANS: As there is 6 potential outcomes the probability is 4/6 (0.667)
+
+-------------------------------------------
+
+2.How many outcomes are there in the sample space of an experiment in which we toss three dice?
+```{r}
+rolldie(3) %>% 
+nrow
+```
+
+ANS : there are 216 outcomes in the sample sapce when 3 die are rolled
+
+-------------------------------------------
+
+3. In an experiment where we roll four dice:
+
+i. how many outcomes are in the event total_equals_5_6_7 
+(i.e. the total of the four dice equals 5,6 or 7)?
+ii. what is the probability of this event?
+iii. what assumptions do we apply in answering part ii?
+
+```{r}
+(total_5_6_7 <-  rolldie(4) %>% 
+  mutate(total = X1 + X2 + X3 + X4) %>% 
+  filter(total == 5 | total == 6 | total == 7) %>% 
+  nrow())
+```
+
+ANS for i:  There are 34 outcomes when 4 die are rolled and the anwer is 5, 6, or 7
+
+
+```{r}
+(four_die_outcome <- rolldie(4) %>% 
+  nrow())
+
+(prob_5_6_7 <- total_5_6_7/four_die_outcome)
+
+```
+
+ANS for ii. There is 1296 outcomes when rolling 4 die, therefore the probability if the answer being 5, 6 or 7 is 
+34/1296 = 0.026
+
+iii. The assumption we make in ii.is that the die are not weighted and therefore the
+probability of rolling 1-6 is 1/6
+
+
+
+4. Five chairs are placed in a row in a room, along with five people of differing height. The people sit down randomly on the chairs. What is the probability that they sit in order of decreasing height, left to right?
+
+```{r}
+
+perms <- as_tibble( 
+permutations(
+  n = 5,
+  r = 5
+  )
+)
+
+decreasing_height <- perms %>% 
+  filter(V1 == 1 & V2 == 2 & V3 == 3 & V4 == 4 & V5 == 5) %>% 
+  nrow
+
+(prob_chairs <- decreasing_height/nrow(perms))
+
+```
+ANS: The probability is 1/120 or 0.0083
+
+
+5. I roll six dice:
+
+i.what is the probability I see the numbers 6, 5, 4, 3, 2 and 1 in order on the dice, left to right?
+
+```{r}
+
+(perms <- rolldie(6) %>% 
+  as_tibble)
+
+number_perms <- nrow(perms)
+
+ordered_outcome <- perms %>% 
+  filter(X1 == 6 & X2 == 5 & X3 == 4 & X4 == 3 & X5 == 2 & X6 == 1) %>% 
+  nrow
+
+(ordered_outcome/number_perms)
+
+```
+
+ANS for i. The probability is 1/46,656 (0.0000214)
+
+
+ii. what is the probability I see one each of the numbers 6, 5, 4, 3, 2 and 1 on the dice regardless of order?
+
+
+ANS: if the order is not fixed the number will be 6 factorial (which is 720)
+therefore probability is 720/46,656 which equals .015
+
+```{r}
+720/number_perms
+
+#test that the numerator should be 720
+x <- isin(perms, c(6,5,4,3,2,1), ordered = F)
+as.data.frame(table(x))
+
+```
+
+6. If I draw a single card from a 52-card deck, and it is black, what is the probability that its suit is spades? 
+
+event A: spade is drawn
+event B: black card is drawn
+intersection of  A & B  is : 13/52
+probability of B is : 26/52 (1/2)
+
+Based on the conditional prob. formula:
+```{r}
+(13/52)/(1/2)
+```
+ANS: the probability is 0.5
+
+
+
+7. Eight patients: Alice, Bob, Carmen, Dinesh, Ella, Fergus, Gianna and Henry are waiting to see a doctor, but only five appointment slots are left today.
+
+i.In how many different orders can the doctor see patients today?
+
+```{r}
+patients <- c("Alice", "Bob", "Carmen", "Dinesh", "Ella", "Fergus", "Gianna", "Henry")
+(patient_perms <- permutations(
+  n = 8,
+  r = 5,
+  v = patients,
+  repeats.allowed = F
+) %>% as_tibble())
+```
+ANS: there is 6720 different ways to order this
+
+
+ii. What is the probability of Gianna and Danesh both being seen today?
+
+```{r}
+patient_perms_2 <- isin(patient_perms, c("Dinesh", "Gianna"), ordered = F)
+as.data.frame(table(patient_perms_2))
+```
+
