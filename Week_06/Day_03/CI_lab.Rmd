@@ -1,0 +1,53 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(infer)
+```
+
+```{r}
+ames <- read_csv("data/ames.csv") %>% 
+  clean_names()
+```
+
+```{r}
+view(ames)
+```
+
+
+
+```{r}
+ames %>% 
+ggplot(aes(x = sale_price)) + 
+geom_histogram(aes(y = ..density..), 
+               col = "black", 
+               fill = "dark blue") +
+    stat_function(
+    fun = dnorm, 
+    args = list(
+      mean = mean(ames$sale_price), 
+      sd = sd(ames$sale_price)
+    ),
+    col = "red"
+) +
+  scale_x_continuous("Sale Price",
+    breaks = scales::breaks_extended(10),
+    labels = scales::label_dollar(scale = 0.001, suffix = "K")
+                  ) 
+               
+```
+
+
+```{r}
+
+bootstrap_resample_200 <- sample_200 %>%
+  rep_sample_n(size = 100, replace = TRUE, reps = 1000) %>%
+  summarise(
+    mean_sale = mean(sale_price)
+  )
+```
+
