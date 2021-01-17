@@ -8,6 +8,12 @@ library(tidyverse)
 library(infer)
 ```
 
+read in data for the extension questions
+```{r}
+retail <- read_csv("data/online_retail_subset.csv")
+```
+
+
 #######################################
 1.1.1 Jabberwockies sleep for around 7hours a night, on average. Perform an appropriate statistical test to determine whether the mean sleep_total in the sampled population of animal types differs from the typical value for jabberwockies.
  #######################################
@@ -197,7 +203,7 @@ ANS:
 #H0: πpopulation = 0.4
 #(the proportion of the population who know about the coffee shop is 0.4)
 
-#Ha: ππpopulation < 0.4
+#Ha: πpopulation < 0.4
 #(the proportion of the population who know about the coffee shop less than 0.4 i.e. the coffee shop is not as popular as the manager believes)
 ```
 
@@ -251,4 +257,75 @@ Significance level: 0.05, p-value: 0.55
 ```{r}
 #As the p-value is larger than the significance level we would  fail to reject the null hypothesis, therefore the average width is equal to 145mm
 ```
+
+
+
+2 Extension
+
+2.5.1 Calculate the support for item A (this will be the support for a single item)
+```{r}
+#create a variable for the total number of transactions
+invoice_num <- retail %>% 
+  select(InvoiceNo)
+
+total_transactions <- nrow(distinct(invoice_num))
+
+#find the total number of purchases of item A
+a_purchases <- retail %>%
+  group_by(StockCode) %>% 
+  filter(StockCode == "22469") %>% 
+  summarise(count = n()) %>% 
+  pull()
+```
+
+```{r}
+#find the support for item A (P(A)) based on the given formula
+sup_a = a_purchases/total_transactions
+```
+The support for item A is 0.078
+
+
+2.5.2 Calculate the support and confidence for rule (A→B)
+```{r}
+# as stated in the question sup(A→B)= P(A and B)=P(A)×P(B)
+# we need to find P(B)
+
+#First find the number of purchases of B
+(b_purchases <- retail %>%
+  group_by(StockCode) %>% 
+  filter(StockCode == "21110") %>% 
+  summarise(count = n()) %>% 
+  pull())
+
+#then find the probability of B being purchased
+(sup_b = b_purchases/total_transactions)
+
+
+```
+The support for item B is 0.01
+
+```{r}
+#From the previous part of the question, we will use P(A):
+#sup(A→B)= P(A and B)=P(A)×P(B), i.e. the support A * support B
+(sup_ab = sup_a * sup_b)
+```
+
+The confidence is (support A * support B)/support A
+```{r}
+#from our previous work:
+(con_ab <- sup_ab/sup_a)
+
+```
+The confidence(a-b) is 0.01 (this is simply the support of B)
+
+
+2.5.3 Calculate the lift for (A→B)
+```{r}
+#this can be expressed as:
+# sup_ab/((sup_a) * (sup_b))
+
+(lift_ab <- sup_ab/(sup_a * sup_b))
+```
+The lift value is 1
+
 
