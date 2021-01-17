@@ -1,0 +1,254 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(infer)
+```
+
+#######################################
+1.1.1 Jabberwockies sleep for around 7hours a night, on average. Perform an appropriate statistical test to determine whether the mean sleep_total in the sampled population of animal types differs from the typical value for jabberwockies.
+ #######################################
+ 
+H0: μsleep_total=7
+(the average sleep of animals is equal to that of the Jabberwocky)
+
+Ha: μsleep_total≠7
+(the average sleep of animals is not equal to that of the Jabberwocky)
+
+Significance level α will be set to 0.05
+
+The mean(sleep_total) is our observed statistic, calculated by:
+```{r}
+(observed_stat_1_1_1 <- msleep %>% 
+  summarise(mean_total_sleep = mean(sleep_total)))
+```
+The average total sleep is 10.4 hours
+
+We will create a null distribution based on H0, therefore μ is equal to 7
+ 
+```{r}
+null_distribution_1_1_1 <- msleep %>% 
+  specify(response = sleep_total) %>% 
+  hypothesise(null = "point", mu = 7) %>% 
+  generate(reps = 10000, type = "bootstrap") %>% 
+  calculate(stat = "mean")
+```
+ 
+ 
+create a visual representation of our null distribution, we are also going to add our observed statistic (10.43373) to the plot and check where this lies and the amount of observations that fall either above of below(this is a two-tailed test)
+ 
+```{r}
+null_distribution_1_1_1 %>%
+  visualise(bins = 30) +
+  shade_p_value(obs_stat = observed_stat_1_1_1, direction = "both", color = "blue4")
+```
+ 
+ The p-value gives the probability of the observed value or greater being seen within our sample, the p-value is:
+```{r}
+(p_value_1_1_1 <- null_distribution_1_1_1 %>% 
+  get_pvalue(obs_stat = observed_stat_1_1_1, direction = "both"))
+```
+ 
+ 
+ 
+As the p_value is zero the chance of seeing this value when our null hypothesis is true is almost none, therefore we will reject the null hypothesis.  Of course the P-Value is also less than our significance level α.
+
+H0: μsleep_total=7 has been rejected and our alternative hypothesis is considered true:
+Ha: μsleep_total≠7
+
+
+
+#######################################
+1.1.2 Perform an appropriate statistical test to determine whether omnivores sleep for significantly longer than herbivores, on average.
+#######################################
+
+Significance level α will be set to 0.05
+
+H0: μsleep_total(ominvores) − μsleep_total(herbivores) = 0
+(the mean sleep time for ominvores is equal to that of herbivores, sleep time is independent on "vore status")
+ 
+Ha: μsleep_total(ominvores) − μsleep_total(herbivores) > 0
+(the mean sleep time for ominvores is greater than that of herbivores, sleep time is dependent on "vore status")
+
+
+```{r}
+#create a subset of the data containing just herbivores and omnivores
+msleep_1_1_2 <- msleep %>%
+  filter(vore == "herbi" | vore == "omni")
+```
+
+
+
+
+```{r}
+(observed_stat_1_1_2 <- msleep_1_1_2 %>% 
+  specify(response = sleep_total, explanatory = vore) %>% 
+  calculate(stat = "diff in means", order = c("omni", "herbi")))
+```
+
+
+#create a null distribution
+# the null hypothesis is that these variables are independent and therefore sleep time would be the same
+```{r}
+null_distribution_1_1_2 <- msleep_1_1_2 %>%
+  specify(response = sleep_total, explanatory = vore) %>% 
+  hypothesise(null = "independence" ) %>% 
+  generate(reps = 5000, type = "permute") %>% 
+  calculate(stat = "diff in means", order = c("omni", "herbi"))
+```
+
+
+#plot the null distribution with the observer stat(1.42), this is a one-tailed observation as we are interested in when the value is larger than the observed statistic
+
+```{r}
+null_distribution_1_1_2 %>% 
+  visualise(bins = 30) +
+  shade_p_value(obs_stat = observed_stat_1_1_2, direction = "right", color = "blue4", fill = "purple")
+```
+
+ The p-value gives the probability of the observed value or greater being seen within our sample, the p-value is:
+```{r}
+  (p_value_1_1_2 <- null_distribution_1_1_2 %>% 
+  get_pvalue(obs_stat = observed_stat_1_1_2, direction = "right"))
+```
+ 
+ As the p_value is 0.118 we therefore fail to reject the null hypothesis,  the p-value is also, as expected, greater than our significance level α.
+ 
+
+ 
+ 
+##############################################
+ 1.1.3 Perform an appropriate statistical test to determine whether the proportion of domesticated animal types in the population of animal types is greater than 5%
+##############################################
+ 
+Significance level α will be set to 0.05
+
+H0: πdomestic_animals = 0.05
+(the proportion of domestic animals is 5%)
+
+Ha: πdomestic_animals > 0.05
+(the proportion of domestic animals is greater than 5%)
+
+```{r}
+#create a logical column for domesticated animals, convert NAs to FALSE as based on inspection these look to be undomesticated animals
+
+msleep_1_1_3 <- msleep %>%
+  mutate(is_domesticated = ifelse(conservation == "domesticated",
+                              "yes", "no")) %>% 
+  mutate(is_domesticated = coalesce(is_domesticated, "no"))
+```
+
+find the ratio of domesticated animals
+```{r}
+(observed_stat_1_1_3 <- msleep_1_1_3 %>% 
+  specify(response = is_domesticated, success = "yes") %>% 
+  calculate(stat = "prop"))
+```
+The proportion of domestic animals is 0.12
+
+
+create a null distribution to test our NULL hypothesise
+```{r}
+null_distribution_1_1_3 <- msleep_1_1_3 %>%
+  specify(response = is_domesticated, success = "yes") %>% 
+  hypothesise(null = "point", p = 0.05) %>% 
+  generate(reps = 5000, type = "simulate") %>%
+  calculate(stat = "prop")
+  
+  
+```
+
+
+create a visualisation of the null distribution and include the observed stat
+```{r}
+null_distribution_1_1_3 %>% 
+  visualise(bins = 15) +
+  shade_p_value(obs_stat = observer_stat_1_1_3, direction = "right", color = "blue4", fill = "purple")
+  
+
+```
+
+
+```{r}
+null_distribution_1_1_3 %>% 
+get_p_value(obs_stat = observer_stat_1_1_3, direction = "right")
+```
+
+As the p_value is 0.007 (it's smaller than our significance level α ) we will therefore reject the null hypothesis.  The proportion of domestic animals is greater than 0.05.
+
+
+
+#####################################
+1.2 Hypothesis testing - interpretation
+
+For the following three business problems write out H0
+ and Ha in both mathematical notation and in words. Also state the method you would use to generate the null distribution (bootstrap, permutation or simulation)
+#####################################
+
+1.2.1.1
+You work for a independent coffee shop. The boss tells you that she thinks that around 40% of people in the town (population 30,000
+) know of the coffee shop, but you are skeptical of the estimate. You conduct a random survey of 200 people in the town, asking if respondents are aware of your coffee shop. You want to use the sample to test the hypothesis that 40% or more of the town’s population have heard of the coffee shop.
+
+ANS:
+```{r}
+#H0: πpopulation = 0.4
+#(the proportion of the population who know about the coffee shop is 0.4)
+
+#Ha: ππpopulation < 0.4
+#(the proportion of the population who know about the coffee shop less than 0.4 i.e. the coffee shop is not as popular as the manager believes)
+```
+
+
+1.2.2.1
+significance level: 0.05, calculated p-value: 0.07
+
+ANS:
+```{r}
+#As the p-value is larger than the significance level we would fail to reject the null hypothesis (the manager is not over estimating the popularity of the coffee shop)
+```
+
+1.2.1.2
+You work for a website design company and have performed an A/B test on the position of a banner on a website promoting a particular item. You selected five days at random last month and then randomly selected 200
+of each sampled day’s users into group A and another 200 of that day’s users into group B.  Group A continued to be shown the banner at the right hand side of the webpage (its usual position) while group B was shown the banner at the top of the page. You monitored each sampled user’s interactions with the website, in particular the ‘click through rate’ (CTR) on the banner, i.e. what proportion of sampled users clicked on the banner. You want to use the sampled data to test the hypothesis that website users overall are more likely to click on the banner if positioned at the top of the page
+
+```{r}
+#H0: μCTR(Banner_RHS) − μCTR(Banner_centre) = 0
+#(the mean CTR for the banner at the right hand side is equal to that of the banner in the centre of the page, ie. CTR is independent of where the banner is located)
+ 
+#Ha: μCTR(Banner_centre) - μCTR(Banner_RHS)  > 0
+#(the mean CTR for the banner at the centre is greater than the RHS banner, ie. CTR is dependent of where the banner is located)
+
+
+```
+
+
+1.2.2.2
+Significance level: 0.01, p-value: 0.006
+```{r}
+#As the p-value is smaller than the significance level we would reject the null hypothesis, therefore CTR is dependent of where the banner is located)
+```
+
+
+1.2.1.3
+You work as an analyst for a car manufacturing company - they have specific standards they must meet for standards and regulation purposes. You have been asked to check the quality control of the manufacture of a particular car part. You have been given data on a sample of 200
+ parts produced over the period of a week (the sampled parts were pulled at random from the production line and measured: the factory produced a lot more than 200 parts that week). The specification of the part stipulates a width of 145mm, and the manufacturing process is said to have ‘drifted’ if the mean width of parts differs significantly from 145mm. You want to use the sampled measurements to test whether the process overall has drifted.
+ 
+```{r}
+#H0: μpart_width = 145
+#(the average width of the part is equal to 145mm)
+
+#Ha:  μpart_width ≠ 145
+#(the average width of the part is not equal to 145mm)
+```
+
+
+1.2.2.3
+Significance level: 0.05, p-value: 0.55
+
+```{r}
+#As the p-value is larger than the significance level we would  fail to reject the null hypothesis, therefore the average width is equal to 145mm
+```
+
