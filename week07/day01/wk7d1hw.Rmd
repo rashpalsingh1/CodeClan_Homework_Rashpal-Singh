@@ -1,12 +1,16 @@
 ---
 title: "R Notebook"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 ```{r}
 library(tidyverse)
 library(tsibbledata)
 library(lubridate)
+library(leaflet)
+library(scales)
 ```
 
 ```{r}
@@ -14,6 +18,7 @@ nyc_bikes_df <- nyc_bikes
 ```
 
 ```{r}
+#Added appropriate columns to allow for additional insight
 nyc_bikes_df <- nyc_bikes_df %>% 
   mutate(
     age = round(year(today()) - birth_year),
@@ -21,6 +26,7 @@ nyc_bikes_df <- nyc_bikes_df %>%
     day_of_week = wday(start_time, label = T, 
                        week_start = 1),
     hour = hour(start_time),
+    day_of_year = yday(start_time),
     duration = as.period(interval(start_time, stop_time))
   )
 ```
@@ -34,53 +40,41 @@ nyc_bikes_df %>%
               arrange(desc(count))
 ```
 
-```{r}
-#most used end stations
-
-nyc_bikes_df %>% 
-  group_by(end_station) %>% 
-  summarise(count = n()) %>% 
-              arrange(desc(count))
-
-```
-
-```{r}
-#male/female ratio
-nyc_bikes_df %>% 
-  group_by(gender) %>% 
-  summarise(count = n())
-```
 
 
 ```{r}
 nyc_bikes_df %>% 
-  group_by(age, gender) %>% 
+  group_by(age, gender, type) %>% 
   filter(gender %in% c("Male", "Female")) %>%
   summarise(count = n()) %>% 
   ggplot(aes(x = age, y = count, colour = gender)) +
+  geom_line() +
+  facet_wrap(~ type)
+  
+```
+
+
+```{r}
+nyc_bikes_df %>% 
+  group_by(month) %>% 
+  summarise(count = n()) %>% 
+  ggplot(aes(x = day_of_year, y = count)) +
   geom_line()
 ```
 
 ```{r}
-#monthly usage
-nyc_bikes_df %>% 
-  group_by(month) %>% 
-  summarise(count = n()) %>% 
-  ggplot(aes(x = month, y = count)) +
-  geom_col(fill = "blue3", col = "black")
-```
-
-
-```{r}
 #daily usage
 nyc_bikes_df %>% 
-  group_by(day_of_week) %>% 
+  group_by(day_of_week, month) %>% 
   summarise(count = n()) %>% 
-  ggplot(aes(x = day_of_week, y = count)) +
-  geom_col(fill = "blue3", col = "black") +
+  ggplot(aes(x = day_of_week, y = count), fill = "blue4") +
+  geom_col(aes(fill = day_of_week )) +
+  facet_wrap(~ month) +
   labs(
-    x = "Day of Week"
-  )
+  x = "Day of Week"
+  ) +
+  theme( axis.text.x = element_text( angle = 90,  hjust = 1 )) +
+  theme(legend.position = "none")
 ```
 
 ```{r}
@@ -93,16 +87,49 @@ nyc_bikes_df %>%
 ```{r}
 #hourly usage
 nyc_bikes_df %>% 
-  group_by(hour, gender) %>% 
+  group_by(hour) %>% 
   summarise(count = n()) %>%
-  filter(gender %in% c("Male", "Female")) %>%
+  #filter(gender %in% c("Male", "Female")) %>%
   ggplot() +
-  geom_line(aes(x = hour, y = count, colour = gender)) +
+  geom_line(aes(x = hour, y = count)) +
  scale_x_continuous(
     breaks = seq(0,23, by = 1)
     ) +
      scale_y_continuous(
     breaks = seq(0,600, by = 50)
     )
+```
+
+
+
+
+```{r}
+test <- nyc_bikes_df %>% 
+  mutate(journey = paste(start_station, end_station))
+  
+```
+
+
+```{r}
+
+(test1 <- test %>% 
+  group_by(journey) %>%
+  summarise(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  head(5) %>% 
+  pull(journey)) %>% 
+  
+  test %>% 
+  filter(journey == test1) %>% 
+  distinct(journey, .keep_all = T)
+
+
+
+```
+
+```{r}
+test1 %>% 
+  grepl("3203 3186")
+  
 ```
 
