@@ -1,0 +1,36 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+project <- read_csv("data/project_management.csv")
+```
+
+
+
+Plot the data, taking estimated_length as the independent variable and actual_length as the dependent variable.
+```{r}
+project %>% 
+  ggplot(aes(x = actual_length, y = estimated_length)) +
+  geom_point()
+
+```
+
+Calculate the correlation coefficient of estimated_length and actual_length and interpret the value you obtain.
+
+```{r}
+project %>% 
+  summarise(corr_coefficient = cor(actual_length, 
+                                   estimated_length))
+```
+The correlation coefficient is 0.8047.  This is a 'very strong' positive correlation
+
+
+Perform a simple linear regression using actual_length as the dependent variable, and estimated_length as the independent variable. Save the model object to a variable.
+
