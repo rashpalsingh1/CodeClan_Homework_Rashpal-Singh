@@ -5,6 +5,9 @@ output: html_notebook
 
 ```{r}
 library(tidyverse)
+library(modelr)
+library(broom)
+library(ggfortify)
 ```
 
 
@@ -14,15 +17,15 @@ project <- read_csv("data/project_management.csv")
 
 
 
-Plot the data, taking estimated_length as the independent variable and actual_length as the dependent variable.
+i)Plot the data, taking estimated_length as the independent variable and actual_length as the dependent variable.
 ```{r}
 project %>% 
-  ggplot(aes(x = actual_length, y = estimated_length)) +
+  ggplot(aes(x =  estimated_length, y = actual_length)) +
   geom_point()
 
 ```
 
-Calculate the correlation coefficient of estimated_length and actual_length and interpret the value you obtain.
+ii)Calculate the correlation coefficient of estimated_length and actual_length and interpret the value you obtain.
 
 ```{r}
 project %>% 
@@ -32,5 +35,39 @@ project %>%
 The correlation coefficient is 0.8047.  This is a 'very strong' positive correlation
 
 
-Perform a simple linear regression using actual_length as the dependent variable, and estimated_length as the independent variable. Save the model object to a variable.
+iii)Perform a simple linear regression using actual_length as the dependent variable, and estimated_length as the independent variable. Save the model object to a variable.
+
+```{r}
+#use lm() to fit a linear model
+(model <- lm(formula = actual_length ~ estimated_length, data = project))
+```
+
+iv)Interpret the regression coefficient of estimated_length (i.e. slope, gradient) you obtain from the model. How do you interpret the r2 value reported by the model?
+```{r}
+#add predictions to check output received from linear model
+project <- project %>% 
+  add_predictions(model)
+```
+
+
+A 1 unit increase in the estimated length changed the actual length by 1.223
+
+```{r}
+(glance_output <- glance(model))
+```
+
+The coefficient of determination (R-Squared) shows that 64.5% of the variation in actual length can be explained by the variation in estimated length.
+
+
+v)Is the relationship statistically significant? Remember, to assess this you need to check the p-value of the regression coefficient (or slope/gradient). But you should first check the regression diagnostic plots to see if the p-value will be reliable (don’t worry about any outlier points you see in the diagnostic plots, we’ll return to them in the extension).
+
+```{r}
+(tidy_output <- tidy(model))
+```
+
+
+
+```{r}
+autoplot(model)
+```
 
