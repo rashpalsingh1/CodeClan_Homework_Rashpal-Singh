@@ -1,0 +1,58 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+library(tidyverse)
+library(GGally)
+library(arsenal)
+```
+
+```{r}
+diamond <- read_csv("diamonds.csv")
+
+diamond <- diamond %>% 
+  select(-X1)
+
+```
+
+
+2.We expect the carat of the diamonds to be strong correlated with the physical dimensions x, y and z. Use ggpairs() to investigate correlations between these four variables.
+
+```{r}
+ggpairs(diamond, columns = c(1, 8:10))
+```
+```{r}
+# ANS: All the correlations are all above 0.9, therefore there is a very strong correlation for each of these variables
+```
+
+
+
+3. So, we do find significant correlations. Let’s drop columns x, y and z from the dataset, in preparation to use only carat going forward.
+
+```{r}
+diamond <- diamond %>% 
+  select(-c(x:z))
+```
+
+
+4. We are interested in developing a regression model for the price of a diamond in terms of the possible predictor variables in the dataset.
+i. Use ggpairs() to investigate correlations between price and the predictors (this may take a while to run, don’t worry, make coffee or something).
+
+```{r}
+ggpairs(diamond)
+```
+ii. Perform further ggplot visualisations of any significant correlations you find.
+
+```{r}
+#The only significant correlation is between carat & price
+diamond %>% 
+  ggplot(aes(x = carat, y = price)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+
+5. Shortly we may try a regression fit using one or more of the categorical predictors cut, clarity and color, so let’s investigate these predictors:
