@@ -1,0 +1,207 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+Homework Quiz
+
+
+1.I want to predict how well 6 year-olds are going to do in their final school exams. Using the following variables am I likely under-fitting, fitting well or over-fitting? Postcode, gender, reading level, score in maths test, date of birth, family income.
+
+```{r}
+#'*1.I want to predict how well 6 year-olds are going to do in their final school exams. Using the following variables am I likely under-fitting, fitting well or over-fitting? Postcode, gender, reading level, score in maths test, date of birth, family income.*
+
+
+# ANS This is likely to be an example of over-fitting
+
+```
+
+
+
+```{r}
+#'*2.If I have two models, one with an AIC score of 34,902 and the other with an AIC score of 33,559 which model should I use?*
+
+# ANS :The model with the lower AIC score should be used
+```
+
+
+```{r}
+#'*3.I have two models, the first with: r-squared: 0.44, adjusted r-squared: 0.43. The second with: r-squared: 0.47, adjusted r-squared: 0.41. Which one should I use?*
+
+# ANS : we would choose the value with the highest adjusted R-squared value
+
+```
+
+
+
+```{r}
+#'*4.I have a model with the following errors: RMSE error on test set: 10.3, RMSE error on training data: 10.4. Do you think this model is over-fitting?*
+
+#
+
+```
+
+
+```{r}
+#'*5.How does k-fold validation work? *
+
+#split the data into k parts.  Set aside one part as the test set.  Train the model using the data for the other k-1 parts.  We test the data on each part, using the other k-1 parts to train the data.  The error is averaged across all the tests.
+
+```
+
+
+```{r}
+#'* 6.What is a validation set? When do you need one?*
+
+# A validation set is used once as a final test of the expected performance of the model
+
+```
+
+
+```{r}
+#'* 7.Describe how backwards selection works. *
+
+regsubsets()
+
+```
+
+
+8.Describe how best subset selection works.
+
+9.It is estimated on 5% of model projects end up being deployed. What actions can you take to maximise the likelihood of your model being deployed?
+
+10.What metric could you use to confirm that the recent population is similar to the development population?
+
+11.How is the Population Stability Index defined? What does this mean in words?
+
+12.Above what PSI value might we need to start to consider rebuilding or recalibrating the model
+
+13.What are the common errors that can crop up when implementing a model?
+
+14.After performance monitoring, if we find that the discrimination is still satisfactory but the accuracy has deteriorated, what is the recommended action?
+
+15.Why is it important to have a unique model identifier for each model?
+
+16.Why is it important to document the modelling rationale and approach?
+
+
+
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(GGally)
+library(ggfortify)
+```
+
+```{r}
+avocado <- read_csv("data/avocado.csv") %>% clean_names()
+
+view(avocado)
+```
+
+```{r}
+#check if there are any variables which can be removed (none reported)
+alias(lm(average_price ~ ., data = avocado))
+```
+
+
+```{r}
+#check for NAs in datset (there are none)
+summary(avocado)
+```
+
+```{r}
+avocado_subset<- avocado %>% 
+  select(-c(region, x1, total_volume, total_bags, x4770, small_bags:x_large_bags))
+
+```
+
+```{r}
+# meaning of PLU numbers:
+# 4046	AVOCADOS	Hass	Small		60 size and smaller
+# 4225	AVOCADOS	Hass	Large		48 and 40 size
+# 4770	AVOCADOS	Hass	All Sizes
+
+avocado_subset <- avocado_subset %>% 
+mutate(date = str_extract(date, "-[0-9]+-")) %>% 
+  mutate(date = str_remove_all(date, "-")) %>%
+  mutate(winter = if_else(date == "01" | date == "02" |
+                            date == "12", T, F )) %>% 
+  mutate(spring = if_else(date == "03" | date == "04" |
+                            date == "05", T, F )) %>% 
+  mutate(summer = if_else(date == "06" | date == "07" |
+                            date == "08", T, F )) %>% 
+  mutate(autumn = if_else(date == "09" | date == "10" |
+                            date == "11", T, F )) %>% 
+  select(-date) %>%
+  mutate(conventional = if_else(type == "conventional", T, F )) %>% 
+  mutate(organic = if_else(type == "organic", T, F)) %>% 
+  select(-type) %>%
+  rename(small = x4046) %>% 
+  rename(large = x4225)
+
+```
+
+```{r}
+#check which predictors are significant for our response variable
+ggpairs(avocado_subset)
+#this doesn't give a clear indication of what predictors to choose
+```
+
+
+```{r}
+
+model1 <- lm(average_price ~ spring, data = avocado_subset)
+summary(model1)
+
+#we can explain 0.6% of the variance in average price based on spring avocado sales.  The P-value is under 0.01 so is statistically significant. The RSE is $0.40.
+
+```
+
+
+```{r}
+model2 <- lm(average_price ~ winter, data = avocado_subset)
+summary(model2)
+#we can explain 2% of the variance in average price based on winter avocado sales. The P-value is under 0.01 so is statistically significant. The RSE is $0.40.
+```
+
+
+```{r}
+model3 <- lm(average_price ~ summer, data = avocado_subset)
+summary(model3)
+#we can explain 0.5% of the variance in average price based on winter avocado sales. The P-value is under 0.01 so is statistically significant. The RSE is $0.40.
+```
+
+```{r}
+model4 <- lm(average_price ~ organic, data = avocado_subset)
+summary(model4)
+#we can explain 38% of the variance in average price based on winter avocado sales. The P-value is under 0.01 so is statistically significant. The RSE is $0.32.
+```
+
+```{r}
+model5 <- lm(average_price ~ conventional, data = avocado_subset)
+summary(model5)
+#we can explain 38% of the variance in average price based on winter avocado sales. The P-value is under 0.01 so is statistically significant. The RSE is $0.32.
+```
+
+
+```{r}
+model6 <- lm(average_price ~ small, data = avocado_subset)
+summary(model6)
+
+#we can explain 4% of the variance in average price based on winter avocado sales. The P-value is under 0.01 so is statistically significant. The RSE is $0.39.
+```
+
+```{r}
+model7 <- lm(average_price ~ large, data = avocado_subset)
+summary(model7)
+#we can explain 3% of the variance in average price based on winter avocado sales. The P-value is under 0.01 so is statistically significant. The RSE is $0.40.
+```
+
+```{r}
+model8 <- lm(average_price ~ year, data = avocado_subset)
+summary(model8)
+#we can explain 3% of the variance in average price based on winter avocado sales. The P-value is under 0.01 so is statistically significant. The RSE is $0.40.
+```
+
