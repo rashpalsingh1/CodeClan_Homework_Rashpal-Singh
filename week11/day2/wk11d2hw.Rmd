@@ -8,6 +8,7 @@ library(rpart)
 library(rpart.plot)
 library(tidyverse)
 library(GGally)
+library(janitor)
 
 
 ```
@@ -25,7 +26,6 @@ titanic_set <- titanic_set[shuffle_index, ]
 
 
 1.1 Question 1
-
 
 
 ```{r}
@@ -58,9 +58,9 @@ titanic_set <-  titanic_set %>%
 view(titanic_set)
 
 titanic_set <- titanic_set %>% 
-  mutate(survived = if_else(survived == 1, "yes", "no" ))
+  mutate(survived = if_else(survived == 1, "lived", "died" ))
 
-
+view(titanic_set)
 
 ```
 
@@ -134,4 +134,54 @@ ggplot(aes(x = parch, fill = survived), position = "dodge") +
 
 3. Now you can start to build your model. Create your testing and training set using an appropriate split. Check you have balanced sets. Write down why you chose the split you did and produce output tables to show whether or not it is balanced. [Extra - if you want to force balanced testing and training sets, have a look at the stratified() function in package splitstackshape (you can specify multiple variables to stratify on by passing a vector of variable names to the group argument, and get back testing and training sets with argument bothSets = TRUE)]
 
+
+```{r}
+# get hthe number of rows
+(n_data <- nrow(titanic_set))
+
+# create a test sample index thast is 20% of the total sample (142)
+test_index <- sample(1:n_data, size = n_data*0.2)
+
+# create test set of 142 rows
+titantic_set_test  <- slice(titanic_set, test_index)
+
+
+# create training set of the remaining data (include all but the test_set)
+titantic_set_train <- slice(titanic_set, -test_index)
+```
+
+```{r}
+# check the balance between the test and training sets
+
+titantic_set_test %>%
+ tabyl(survived)
+
+titantic_set_train %>%
+ janitor::tabyl(survived)
+```
+
+The sets are reasonably balanced:
+test set has a survived % of 46%
+training set has a survived % of 39%
+
+
+
+
+4. Create your decision tree to try and predict survival probability using an appropriate method, and create a decision tree plot.
+
+```{r}
+#create decision tree
+titanic_set_fit <- rpart(
+  formula = survived ~ ., 
+  data = titanic_set, 
+  method = 'class'
+)
+
+#plot tree
+rpart.plot(titanic_set_fit, 
+           yesno = 2, 
+           #fallen.leaves = TRUE, 
+           faclen = 6, 
+           digits = 4)
+```
 
