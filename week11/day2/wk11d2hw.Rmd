@@ -7,6 +7,7 @@ output: html_notebook
 library(rpart)
 library(rpart.plot)
 library(tidyverse)
+library(GGally)
 
 
 ```
@@ -54,6 +55,11 @@ select(-c(X1, passenger_id, name, ticket, fare, cabin))
 #also set age_status to factor
 titanic_set <-  titanic_set %>% 
   mutate(age_status = as_factor(age_status))
+view(titanic_set)
+
+titanic_set <- titanic_set %>% 
+  mutate(survived = if_else(survived == 1, "yes", "no" ))
+
 
 
 ```
@@ -63,8 +69,69 @@ titanic_set <-  titanic_set %>%
 
 ```{r}
 
+ggpairs(titanic_set)
+#this doesn't really show much so choose o plot individually as not too many variables
 
-
+# check plot for age
+titanic_set %>% 
+ggplot(aes(x = survived, y = age)) +
+  geom_boxplot()
+  
+#There doesn't seem to be a hugh variation in the ages of those that survived and those that perished
 ```
+
+```{r}
+# check plot for sex
+titanic_set %>% 
+ggplot(aes(x = survived, fill = sex)) +
+  geom_bar()
+
+# clearly a higher proportion of women survived than men - women and children first!!
+```
+
+```{r}
+# check plot for age
+titanic_set %>% 
+ggplot(aes(x = survived, fill = age_status)) +
+  geom_bar()
+
+#more children survived than died this would be expected as stated above
+```
+
+```{r}
+titanic_set %>% 
+ggplot(aes(x = pclass, fill = survived), position = "dodge") +
+  geom_bar()
+
+#class is clearly a decider in whether an individual survived
+```
+
+```{r}
+titanic_set %>% 
+ggplot(aes(x = embarked, fill = survived), position = "dodge") +
+  geom_bar()
+
+#where an individual boarded seems to have an impact on whether they survived however from wikipeadia:
+#920 passengers boarded Titanic at Southampton – 179 First Class, 247 Second Class, and 494 Third Class
+#perhaps mainly first class passengers boarded at those other two ports??
+```
+
+```{r}
+titanic_set %>% 
+ggplot(aes(x = sib_sp, fill = survived), position = "dodge") +
+  geom_bar()
+
+# The majority of children had no siblings, I'm not sure this variable has any bearing on whether someone survived
+```
+
+```{r}
+titanic_set %>% 
+ggplot(aes(x = parch, fill = survived), position = "dodge") +
+  geom_bar()
+## The majority of children had no parents onboard, I'm not sure this variable has any bearing on whether someone survived
+```
+
+
+3. Now you can start to build your model. Create your testing and training set using an appropriate split. Check you have balanced sets. Write down why you chose the split you did and produce output tables to show whether or not it is balanced. [Extra - if you want to force balanced testing and training sets, have a look at the stratified() function in package splitstackshape (you can specify multiple variables to stratify on by passing a vector of variable names to the group argument, and get back testing and training sets with argument bothSets = TRUE)]
 
 
