@@ -1,0 +1,70 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(rpart)
+library(rpart.plot)
+library(tidyverse)
+
+
+```
+
+
+```{r}
+titanic_set <- read_csv("data/titanic_decision_tree_data.csv")
+
+shuffle_index <- sample(1:nrow(titanic_set))
+
+# shuffle the data so class order isn't in order - need this for training/testing split later on 
+titanic_set <- titanic_set[shuffle_index, ]
+```
+
+
+
+1.1 Question 1
+
+
+
+```{r}
+#Take only observations which have a survived flag (i.e. that aren’t missing)
+titanic_set <- titanic_set %>% 
+  filter(!is.na(survived))
+
+#Turn your important variables into factors (sex, survived, pclass, embarkation)
+
+titanic_set <- titanic_set %>% 
+mutate_if(is.character, as.factor)
+
+
+#Create an age_status variable which groups individuals under (and including) 16 years of age into a category called “child” category and those over 16 into a category called “adult”.
+
+titanic_set <- titanic_set %>% 
+  mutate(age_status = if_else(age <= 16, "child", "adult" )) %>% 
+  filter(!is.na(age_status))
+
+
+
+#Drop any variables you don’t need (X1, passenger_id, name, ticket, far, cabin)
+titanic_set <-  titanic_set %>% 
+select(-c(X1, passenger_id, name, ticket, fare, cabin))
+
+
+#also set age_status to factor
+titanic_set <-  titanic_set %>% 
+  mutate(age_status = as_factor(age_status))
+
+
+```
+
+
+2. Have a look at your data and create some plots to ensure you know what you’re working with before you begin. Write a summary of what you have found in your plots. Which variables do you think might be useful to predict whether or not people are going to die? Knowing this before you start is the best way to have a sanity check that your model is doing a good job.
+
+```{r}
+
+
+
+```
+
+
