@@ -205,4 +205,6 @@ For those women who had one or more sibling and survived, if they were younger t
 
 
 
+6. Test and add your predictions to your data. Create a confusion matrix. Write down in detail what this tells you for this specific dataset.
+
 
