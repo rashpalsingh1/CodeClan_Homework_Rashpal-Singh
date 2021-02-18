@@ -113,7 +113,7 @@ augment(clustered_cust, customers)
 tidy(clustered_cust)
 ```
 
-Cluster 1 seesm to be medium income, age and spending score.
+Cluster 1 seems to be medium income, age and spending score.
 Cluster 2 seems to be medium age, low income and low spending score
 Cluster 3 seems to be low age, high income and high spending score
 Cluster 4 seems to be medium age, high income and low spending score
