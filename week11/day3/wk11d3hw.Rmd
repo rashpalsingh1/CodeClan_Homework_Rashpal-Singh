@@ -109,3 +109,12 @@ Comment on the attributes on one or two of the clusters (maybe even give them a 
 ```{r}
 augment(clustered_cust, customers)
 ```
+```{r}
+tidy(clustered_cust)
+```
+
+Cluster 1 seesm to be medium income, age and spending score.
+Cluster 2 seems to be medium age, low income and low spending score
+Cluster 3 seems to be low age, high income and high spending score
+Cluster 4 seems to be medium age, high income and low spending score
+Cluster 5 seems to be low age, low income and high spending score
