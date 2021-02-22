@@ -1,0 +1,155 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(GGally)
+library(broom)
+```
+
+
+```{r}
+juice <- read_csv("data/orange_juice.csv") %>% clean_names()
+
+view(juice)
+summary(juice)
+```
+
+# There sems to be redundant variables storeId, store7 and STORE all provide the same information
+```{r}
+#removing store & store7
+juice <- juice %>%
+  select(-c(store7, store))
+         
+```
+
+```{r}
+#create new column for whether MM was purchased
+juice <- juice %>% 
+  mutate(purchase_MM = ifelse(purchase == "MM", T, F )) %>% 
+  select(-purchase)
+
+
+juice <- juice %>% 
+  mutate(special_ch = ifelse(special_ch == "1", T, F )) %>% 
+  mutate(special_mm = ifelse(special_mm == "1", T, F )) #%>% 
+
+```
+
+
+```{r}
+#check for other potential redundant variables
+
+alias(glm(purchase_MM ~ ., data = juice, family = binomial(link = 'logit')))
+
+# sale_price_mm, sale_price_ch, price_diff, list_price_diff cqn be computed from other variables and will be removed
+# also rmoved pct_disc_mm & pct_disc_ch
+
+juice <- juice %>%
+  select(-c(sale_price_mm, sale_price_ch, price_diff, list_price_diff, pct_disc_ch, pct_disc_mm))
+
+juice <-  juice %>% 
+  mutate(store_id = as.factor(store_id))
+
+view(juice)
+
+```
+
+```{r}
+#plot variables against purchase MM
+
+juice %>% 
+  ggplot(aes(x = purchase_MM, y = weekof_purchase)) +
+    geom_boxplot()
+```
+
+```{r}
+
+juice %>% 
+ggplot() +
+  geom_bar(aes(x = purchase_MM, fill = store_id), position = "dodge")
+```
+
+#It seems as thought there is a link between the store and the purchase of MM
+
+
+```{r}
+#the price of Citrus Hill
+juice %>% 
+  ggplot(aes(x = purchase_MM, y = price_ch)) +
+    geom_boxplot()
+```
+# There seems to be little difference made by the price of Citrus Hill and whether Minute Maid is purchased
+
+
+```{r}
+#the price of Minute Maid
+juice %>% 
+  ggplot(aes(x = purchase_MM, y = price_mm)) +
+    geom_boxplot()
+```
+
+#As expected the price of Minute Maid determines whether it is purchased
+
+
+```{r}
+#the discount on CH
+juice %>% 
+  ggplot(aes(x = purchase_MM, y = disc_ch)) +
+    geom_boxplot()
+```
+#As expected has an inverse relationship with purchase of MM
+
+
+```{r}
+#the discount on MM
+juice %>% 
+  ggplot(aes(x = purchase_MM, y = disc_mm)) +
+    geom_boxplot()
+```
+#As expected impacts whether MM is purchased
+
+
+```{r}
+#special on CH
+juice %>% 
+ggplot() +
+  geom_bar(aes(x = purchase_MM, fill = special_ch))
+```
+#As expected this has an inverse relationship
+
+
+```{r}
+juice %>% 
+ggplot() +
+  geom_bar(aes(x = purchase_MM, fill = special_mm))
+```
+
+#As expected a special on MM increases MM purchases
+
+```{r}
+#Loyalty to CH
+juice %>% 
+  ggplot(aes(x = purchase_MM, y = loyal_ch)) +
+    geom_boxplot()
+```
+Clearly the greater the loyalty to CH, the less likely to buy MM
+
+
+```{r}
+#decided to exclude weekofpurchase variable for simplicity
+juice_model <- glm(purchase_MM ~ store_id +  price_mm + disc_ch + disc_mm + special_ch + special_mm + loyal_ch,  data = juice, 
+                   family = binomial(link = 'logit'))
+
+```
+
+
+```{r}
+tidy(juice_model)
+```
+
+Based on the output above store_id & special_ch & special_mm are not significant
+
