@@ -5,20 +5,27 @@ output: html_notebook
 
 ```{r}
 library(tidyverse)
+library(janitor)
 ```
 
 ```{r}
-movies <- read_csv("tmdb_5000_movies.csv")
+movies <- read_csv("tmdb_5000_movies.csv") %>% clean_names()
 ```
 
 ```{r}
 view(movies)
+summary(movies)
+
+# number of NAs
+sum(is.na(movies))
 ```
 Quesion 1. After you’ve read in the data and assigned it to a variable with a useful name, investigate it. Write down some ideas for what you could do to further investigate/clean this data using what you’ve learned today (no need to code it though, just jot down thoughts and ideas). Feel free to also write down any general thoughts you get looking at the data - this task is just to get you thinking about data and data cleaning/prepping.
 
 ```{r}
 # 1) i) The 'original language' could include the full name and not simply an abbreviation.
 # ii) The 'popularity column could be displayed with less decimal places (currently 6 d.p.)
+# iii) There is many NAs (3942)
+
 ```
 
 
@@ -41,20 +48,20 @@ Ok, now take your subsetted data movies_selected, and count the number of missin
 #check for Nan or NA values in the 3 columns
 
 movies_selected %>% 
-  filter(is.na(runtime))
+  summarise(runtime_count_na = sum(is.na(runtime)))
   
 ```
 
 ```{r}
 movies_selected %>% 
-  filter(is.na(title))
+  summarise(title_count_na = sum(is.na(title)))
 
 ```
 
 
 ```{r}
 movies_selected %>% 
-  filter(is.na(budget))
+  summarise(budget_count_na = sum(is.na(budget)))
 
 ```
 
@@ -77,7 +84,7 @@ movies_runtime <- movies_selected %>%
 
 #check how many rows in column runtime have a value of 0
 movies_runtime %>% 
-  filter(runtime == 0)
+  summarise(runtime_count_na = sum(is.na(runtime)))
 ```
 
 
@@ -92,7 +99,7 @@ movies_imputed <- movies_runtime %>%
 ```{r}
 #check to ensure it now has no NA values
 movies_imputed %>% 
-  filter(is.na(runtime))
+    summarise(runtime_count_na = sum(is.na(runtime)))
 ```
 
 
@@ -121,14 +128,50 @@ Using the if_else function, impute anything with a budget below $100 with the me
 #This doesn't seem to work, I'm not sure why??
 movies_imputed_with_budget <- movies_imputed %>% 
   mutate(
-    budget = if_else(budget <= 100, (budget = coalesce(budget, median(budget))), budget)
+    budget = if_else(budget < 100, median(budget), budget)
   )
-
 ```
 
 ```{r}
 #Test for the above
-movies_imputed %>% 
+movies_imputed_with_budget %>% 
 slice_min(budget, n = 10)
+```
+
+EXTENSIONS
+
+Q1
+Using case_when, create a new column called budget_type and label budgets as follows:
+
+Budgets below 12 million as ‘Small budget’
+Budgets between 12 and 40 million as ‘Medium budget’
+Budgets 40 millions and above as ‘Big budget’
+Save this into a new variable called movie_budgets.
+
+```{r}
+movie_budgets <- movies_imputed_with_budget %>% 
+  mutate(
+    budget_type = case_when(
+      budget < 12000000  ~ "Small Budget",
+      budget >= 12000000 & budget < 40000000 ~ "Medium Budget",
+      budget >= 40000000 ~ "Big Budget"
+    )
+  )
+
+
+```
+
+
+Q2 Take the original dataset with all the variables. Using across and where, summarise the number of missing values, first across all columns of type character, and then across all columns of type numeric.
+
+```{r}
+movies %>% 
+  summarise(across(where(is.character), ~ sum(is.na(.x))))
+```
+
+
+```{r}
+movies %>% 
+  summarise(across(where(is.numeric), ~ sum(is.na(.x))))
 ```
 
