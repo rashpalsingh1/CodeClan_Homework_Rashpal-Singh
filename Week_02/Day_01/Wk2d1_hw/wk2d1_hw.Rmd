@@ -14,25 +14,19 @@ Question 1
 Read in all 4 credit card transaction datasets and clean column names.
 
 ```{r}
-cardbase_data <- read_csv("data/CardBase.csv")
-custbase_data <- read_csv("data/CustomerBase.csv")
-fraudbase_data <- read_csv("data/FraudBase.csv")
-transactionbase_data <- read_csv("data/TransactionBase.csv")
+cardbase_data <- read_csv("data/CardBase.csv") %>% clean_names()
+custbase_data <- read_csv("data/CustomerBase.csv") %>% clean_names()
+fraudbase_data <- read_csv("data/FraudBase.csv") %>% clean_names()
+transactionbase_data <- read_csv("data/TransactionBase.csv") %>% clean_names()
 ```
 
 
-```{r}
-cardbase_clean <- clean_names(cardbase_data)
-custbase_clean <- clean_names(custbase_data)
-fraudbase_clean <- clean_names(fraudbase_data)
-transactionbase_clean <- clean_names(transactionbase_data)
-```
 
 ```{r}
-#view(cardbase_clean)
-#view(custbase_clean)
-#view(fraudbase_clean)
-#view(transactionbase_clean)
+view(cardbase_data)
+view(custbase_data)
+view(fraudbase_data)
+view(transactionbase_data)
 ```
 
 
@@ -42,7 +36,7 @@ Question 2
 Join the data containing card details and customer details by customer id, so that all records of card details and any matching records in customer details are kept. Before you run the code, think about how many rows you expect to see after joining.
 
 ```{r}
-inner_join(cardbase_clean, custbase_clean, "cust_id")
+left_join(cardbase_data, custbase_data, "cust_id")
 ```
 
 
@@ -51,7 +45,7 @@ Question 3
 Join the data containing fraud details with transaction details so all rows of both tables are kept. What does the resulting row number tell you?
 
 ```{r}
-full_join(fraudbase_clean, transactionbase_clean)
+full_join(fraudbase_data, transactionbase_data)
 #10,000 rows are returned the same number in the transaction file
 ```
 
@@ -61,8 +55,7 @@ Question 4
 Join the data containing card details with transaction details so rows from the first which have matching ones in the second are returned, but only return rows in the first table once.
 
 ```{r}
-semi_join(cardbase_clean, transactionbase_clean, by = c("card_number" = "credit_card_id"))
-#Note, this doesn't seem to give the desired results, however it seems to follow the notes and what we were told in class!
+semi_join(cardbase_data, transactionbase_data, by = c("card_number" = "credit_card_id"))
 ```
 
 Question 5
@@ -71,8 +64,9 @@ Read in hat_observations and separate observation into two columns, hat_colour a
 
 
 ```{r}
-hat_obs <- read_csv("data/hat_observations.csv")
+hat_obs <- read_csv("data/hat_observations.csv") %>% clean_names()
 
+#view(hat_obs)
 ```
 
 ```{r}
@@ -92,18 +86,63 @@ Question 6
 Unite day, month, and year columns into a column called date using a suitable separator. Then find the date where the most berets were observed.
 
 ```{r}
-#I've cheated here slightly as I know that there is only one date where the max number of berets were observed, this would clearly fail if the max number was seen on more than one day
-hats_obs_split  %>%
+hats_with_date <- hats_obs_split  %>%
   unite(
     col = "date",
     c(day, month, year),
-    sep = "/"
-  ) %>% 
+    sep = "-"
+  )
+    
+hats_with_date %>% 
   filter(hat_type == "beret") %>% 
-  arrange(desc(observation_count)) %>%
-  head(1) %>% 
-  select(date)
-  
+  group_by(date) %>% 
+  summarise(count = sum(observation_count)) %>% 
+  slice_max(count)
 ```
 
+
+EXTENSIONS
+
+
+Q1. Can you join all 4 datasets together so that you’re left with a dataset that looks like below with 109 rows and 12 columns?
+
+
+```{r}
+#join cards and customers
+int_table <- left_join(cardbase_data, custbase_data, "cust_id")
+
+#join cards, customers and transactions
+int_table2 <- left_join(
+  int_table, transactionbase_data, by = c("card_number" = "credit_card_id")
+  )
+
+# join cards, customers, transactions with fraud cases where there exists a fradulent transaction
+int_table3 <- semi_join(int_table2, fraudbase_data, "transaction_id")
+
+#view(int_table3)
+
+```
+
+
+
+Q2. Read in exam_scores and transform it into long format with two new columns exam_question and score. Then, using separate and select, remove superfluous information from the values in exam_question
+
+```{r}
+exams <- read_csv("data/exam_scores.csv") %>% clean_names()
+
+# create one column for all exam questions
+exams_long <- exams %>% 
+  pivot_longer(cols = starts_with("exam"), 
+               names_to = "exam_question", 
+               values_to = "score")
+
+#remove the word exam from exam_question column
+exams_split <- exams_long %>% 
+  separate(exam_question, c("extra", "question_number"), sep = "q" ) %>%
+  #remove the 'extra' column
+  select(id, question_number, score)
+
+
+#view(exams_split)
+```
 
